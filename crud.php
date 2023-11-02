@@ -14,6 +14,7 @@ class Crud
         }
     }
 
+    // This function is used to check values
     public function checkValues($array)
     {
         foreach ($array as $value) {
