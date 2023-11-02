@@ -14,7 +14,7 @@ class Crud
         }
     }
 
-    // This function is used to check values
+    // This function is used to check values that is empty or not
     public function checkValues($array)
     {
         foreach ($array as $value) {
@@ -25,6 +25,7 @@ class Crud
         return true;
     }
 
+    // This function is use for insert data in database
     public function insert($getdata)
     {
         $data = [
@@ -56,6 +57,7 @@ class Crud
             }
         }
     }
+    // This function is use for select data from database using id
     public function selectId($data)
     {
         $id = $data['id'];
@@ -71,6 +73,7 @@ class Crud
             print_r(json_encode("error"));
         }
     }
+    // This function is use for select data from database
     public function select($id = null)
     {
         $sql = "select * from crud_ajax $id";
@@ -85,6 +88,7 @@ class Crud
             print_r(json_encode("error"));
         }
     }
+    // This function is use for delete data from database
     public function delete($data)
     {
         $id= $data['id'];
@@ -97,6 +101,7 @@ class Crud
             echo "<script> alert('query error')</script>";
         }
     }
+    // This function is use for update data in database
     public function update($data)
     {
         $updData = [
