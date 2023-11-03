@@ -10,7 +10,25 @@ class Crud
     {
         $this->con = mysqli_connect("localhost", "root", "root", "vatsal");
         if (!$this->con) {
-            echo "<script> alert('connection error')</script>";
+            print_r(json_encode("Connection error"));
+        }
+    }
+
+    public function checkEmail($data)
+    {
+        $email = $data['email'];
+        if (isset($data['oldEmail'])) {
+            if ($data['oldEmail'] === $email) {
+                return;
+            }
+        }
+        $sql = "select * from crud_ajax where email = '$email'";
+        $this->query = $sql;
+        $this->res = mysqli_query($this->con, $this->query);
+        if ($this->res) {
+            $count = mysqli_num_rows($this->res);
+            if ($count > 0)
+                print_r(json_encode("email already exists"));
         }
     }
 
@@ -26,115 +44,107 @@ class Crud
     }
 
     // This function is use for insert data in database
-    public function insert($getdata)
+    public function saveData($postdata)
     {
-        $data = [
-            "name"   => $getdata['name'],
-            "email"  => $getdata['email'],
-            "pwd"    => $getdata['pwd'],
-            "conpwd" => $getdata['conpwd'],
-        ];
-
-        if($this->checkValues($data) == false){
-            $error = "All field is required";
-            echo json_encode(['message' => $error, 'type' => 'text-danger']);
-        } elseif ($data['pwd'] != $data['conpwd']) {
-            $error = "Password and Confirm Password is not same .";
-            echo json_encode(['message' => $error, 'type' => 'text-danger']);
+        if ($postdata['id'] != "") {
+            try {
+                $id = $postdata['id'];
+                if ($this->checkValues($postdata) == false) {
+                    $error = "All field is required";
+                    echo json_encode(['message' => $error, 'type' => 'text-danger']);
+                } elseif ($postdata['pwd'] != $postdata['conpwd']) {
+                    $error = "Password and Confirm Password is not same .";
+                    echo json_encode(['message' => $error, 'type' => 'text-danger']);
+                } else {
+                    array_pop($postdata);
+                    array_pop($postdata);
+                    $dataupd = " ";
+                    foreach ($postdata as $key => $value) {
+                        $dataupd .= "$key = '$value', ";
+                    }
+                    $dataupd = rtrim($dataupd, ', ');
+                    $query = "UPDATE crud_ajax SET $dataupd WHERE id = $id";
+                    $this->query = $query;
+                    $this->res = mysqli_query($this->con, $this->query);
+                    if ($this->res) {
+                        $msg = "Data Updated Successfully !!";
+                        echo json_encode(['message' => $msg, 'type' => 'text-success']);
+                        return;
+                    }
+                    print_r(json_encode("Database error"));
+                }
+            } catch (\Throwable $th) {
+                print_r(json_encode(["message" => $th->getMessage()]));
+            }
         } else {
-            array_pop($data);
-            $keys = implode("`,`", array_keys($data));
-            $val = implode("','", array_values($data));
-            $query = "insert into crud_ajax (`" . $keys . "`) values('" . $val . "')";
-            $this->query = $query;
+            try {
+                array_shift($postdata);
+                if ($this->checkValues($postdata) == false) {
+                    $error = "All field is required";
+                    echo json_encode(['message' => $error, 'type' => 'text-danger']);
+                } elseif ($postdata['pwd'] != $postdata['conpwd']) {
+                    $error = "Password and Confirm Password is not same .";
+                    echo json_encode(['message' => $error, 'type' => 'text-danger']);
+                } else {
+                    array_pop($postdata);
+                    array_pop($postdata);
+                    $keys = implode("`,`", array_keys($postdata));
+                    $val = implode("','", array_values($postdata));
+                    $query = "insert into crud_ajax (`" . $keys . "`) values('" . $val . "')";
+                    $this->query = $query;
+                    $this->res = mysqli_query($this->con, $this->query);
+                    if (!$this->res) {
+                        print_r(json_encode("Database error"));
+                        return;
+                    }
+                    $msg = "Data Inserted Successfully !!";
+                    echo json_encode(['message' => $msg, 'type' => 'text-success']);
+                }
+            } catch (\Throwable $th) {
+                print_r(json_encode(['message' => $th->getMessage()]));
+            }
+        }
+    }
+
+    // This function is use for select data from database
+    public function select($data = null)
+    {
+        if ($data) {
+            $id = $data['id'];
+            $sql = "select * from crud_ajax where id = $id";
+            $this->query = $sql;
             $this->res = mysqli_query($this->con, $this->query);
             if ($this->res) {
-                $error = "Data Inserted Successfully !!";
-                echo json_encode(['message' => $error, 'type' => 'text-success']);
+                $data = mysqli_fetch_assoc($this->res);
+                print_r(json_encode($data));
             }
-            else {
-                echo "<script> alert('query error')</script>";
+        } else {
+            $sql = "select * from crud_ajax";
+            $this->query = $sql;
+            $this->res = mysqli_query($this->con, $this->query);
+            if (!$this->res) {
+                print_r(json_encode("Database error"));
             }
         }
     }
-    // This function is use for select data from database using id
-    public function selectId($data)
-    {
-        $id = $data['id'];
-        $sql = "select * from crud_ajax where id = $id";
-        $this->query = $sql;
-        $this->res = mysqli_query($this->con, $this->query);
-        if ($this->res) {
-            $data = mysqli_fetch_assoc($this->res);
-            print_r(json_encode($data));
-        }
-        else {
-            echo "<script> alert('query error')</script>";
-            print_r(json_encode("error"));
-        }
-    }
-    // This function is use for select data from database
-    public function select()
-    {
-        $sql = "select * from crud_ajax";
-        $this->query = $sql;
-        $this->res = mysqli_query($this->con, $this->query);
-        if (!$this->res) {
-            echo "<script> alert('query error')</script>";
-            print_r(json_encode("error"));
-        }
-    }
+
     // This function is use for delete data from database
     public function delete($data)
     {
-        $id= $data['id'];
+        $id = $data['id'];
         $sql = "delete from crud_ajax where id=$id";
         $this->query = $sql;
         $this->res = mysqli_query($this->con, $this->query);
         if ($this->res) {
             echo json_encode(['message' => 'Record Deleted', 'type' => 'text-danger']);
-        } else {
-            echo "<script> alert('query error')</script>";
+            return;
         }
-    }
-    // This function is use for update data in database
-    public function update($data)
-    {
-        $updData = [
-            "name"   => $data['name'],
-            "email"  => $data['email'],
-            "pwd"    => $data['pwd'],
-            "conpwd" => $data['conpwd'],
-        ];
-        $id = $data['id'];
-        if ($this->checkValues($data) == false) {
-            $error = "All field is required";
-            echo json_encode(['message' => $error, 'type' => 'text-danger']);
-        } elseif ($updData['pwd'] != $updData['conpwd']) {
-            $error = "Password and Confirm Password is not same .";
-            echo json_encode(['message' => $error, 'type' => 'text-danger']);
-        } else {
-            array_pop($updData);
-            $dataupd = " ";
-            foreach ($updData as $key => $value) {
-                $dataupd .= "$key = '$value', ";
-            }
-            $dataupd = rtrim($dataupd, ', '); 
-            $query = "UPDATE crud_ajax SET $dataupd WHERE id = $id";
-            $this->query = $query;
-            $this->res = mysqli_query($this->con, $this->query);
-            if ($this->res) {
-                $error = "Data Updated Successfully !!";
-                echo json_encode(['message' => $error, 'type' => 'text-success']);
-            } else {
-                echo "<script> alert('query error')</script>";
-            }
-        }
+        echo "<script> alert('query error')</script>";
     }
 }
 
 $crud = new Crud();
-if (isset($_REQUEST['fun'])) {
-    $fun = $_REQUEST['fun'];
+if (isset($_REQUEST['method'])) {
+    $fun = $_REQUEST['method'];
     $crud->$fun($_REQUEST);
 }

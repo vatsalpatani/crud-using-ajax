@@ -6,12 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Show Data</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        label.error {
+            color: #a94442;
+        }
+    </style>
 </head>
 
 <body>
 
     <div class="container-md">
-        <table class="table table-bordered mt-5 mb-5 table-striped">
+        <table class="table table-bordered mt-5 mb-5 table-striped table-responsive">
             <tr>
                 <td colspan=6><button type="button" class="btn btn-primary float-end" id="insmodel">Insert Data</button></td>
             </tr>
@@ -39,7 +44,7 @@
                 </tr>
             <?php } ?>
         </table>
-        <div class="modal fade" id="myModel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal fade" id="myModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog" id="myInput">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -47,7 +52,7 @@
                         <button type="button" class="btn-close btnclose" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="" method="post" id="form1">
+                        <form action="" method="post" id="form1" class="">
                             <input type="hidden" name="id" id="rowId">
                             <div class="row form-group m-3">
                                 <div class="col-md-3">
@@ -126,7 +131,19 @@
             $("#form1").validate().destroy()
         }
 
-        function showModel(name, data = null) {
+        function showModal(type, data = null) {
+            $("#myModal").modal('show')
+            $(".modal-title").html(type + " Data")
+            $("#btnsub").html(type)
+            oldemail = ""
+            if (type == "Update") {
+                $("#name").val(data.name)
+                $("#email").val(data.email)
+                $("#pwd").val(data.pwd)
+                $("#conpwd").val(data.pwd)
+                $("#rowId").val(data.id)
+                oldemail = "oldEmail=" + data.email
+            }
             $("#form1").validate({
                 rules: {
                     'name': {
@@ -134,7 +151,11 @@
                     },
                     'email': {
                         required: true,
-                        email: true
+                        email: true,
+                        remote: {
+                            url: "crud.php?method=checkEmail&email=" + $("#email").val() + "&" + oldemail,
+                            type: "GET",    
+                        }
                     },
                     'pwd': {
                         required: true,
@@ -149,35 +170,37 @@
                             url: 'crud.php',
                             type: 'POST',
                             dataType: 'json',
-                            data: $("form").serialize() + "&fun=" + $("#btnsub").html()
+                            data: $("form").serialize() + "&method=saveData"
                         })
                         .done(function(response) {
                             showAlert(response.type, response.message);
                             resetData();
                         });
-                    $("#myModel").modal('hide')
+                    $("#myModal").modal('hide')
                 },
+                highlight: function(element) {
+                    $(element).css('border-color', 'red');
+                },
+                unhighlight: function(element) {
+                    $(element).css('border-color', 'green');
+                }
+                // highlight: function(element) {
+                //     $(element).css('background', '#ffdddd');
+                // },
+                // unhighlight: function(element) {
+                //     $(element).css('background', 'lightgreen');
+                // }
             });
-            $("#myModel").modal('show')
-            $(".modal-title").html(name+" Data")
-            $("#btnsub").html(name)
-            if (name == "Update") {
-                $("#name").val(data.name)
-                $("#email").val(data.email)
-                $("#pwd").val(data.pwd)
-                $("#conpwd").val(data.pwd)
-                $("#rowId").val(data.id)
-            }
         }
 
         $(document).ready(function() {
             $("#insmodel").click(function() {
-                showModel("Insert");
+                showModal("Insert");
             });
             $(".delete").click(function() {
                 var id = $(this).data("id")
                 $.ajax({
-                        url: 'crud.php?fun=delete&id=' + id,
+                        url: 'crud.php?method=delete&id=' + id,
                         type: 'GET',
                         dataType: 'json',
                     })
@@ -189,13 +212,12 @@
             $(".updmodel").click(function() {
                 var id = $(this).data("id")
                 $.ajax({
-                        url: 'crud.php?fun=selectID&id=' + id,
+                        url: 'crud.php?method=select&id=' + id,
                         type: 'GET',
                         dataType: 'json',
                     })
                     .done(function(response) {
-                        console.log(response);
-                        showModel("Update", response)
+                        showModal("Update", response)
                     });
             });
             $(".btnclose").click(function() {
