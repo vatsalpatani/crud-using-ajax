@@ -47,7 +47,7 @@
                         <button type="button" class="btn-close btnclose" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form action="" method="post">
+                        <form action="" method="post" id="form1">
                             <input type="hidden" name="id" id="rowId">
                             <div class="row form-group m-3">
                                 <div class="col-md-3">
@@ -81,12 +81,12 @@
                                     <input type="password" name="conpwd" id="conpwd" class="form-control">
                                 </div>
                             </div>
-                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary btnclose" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="btnsub"></button>
+                        <button type="submit" class="btn btn-primary" id="btnsub"></button>
                     </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -97,14 +97,13 @@
                     <small></small>
                     <button type="button" class="btn-close btnclose" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
-                <div class="toast-body">
-                </div>
+                <div class="toast-body"></div>
             </div>
         </div>
     </div>
-    <script src="../assets/js/bootstrap.bundle.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/jquery.min.js"></script>
-    <script src="../assets/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="../jquery-validation/dist/jquery.validate.min.js"></script>
     <script>
         function showAlert(type, message) {
             if (message != "" && type != "") {
@@ -123,29 +122,57 @@
         }
 
         function resetData() {
-            $("form *").val("");
+            $("form *").val("")
+            $("#form1").validate().destroy()
         }
 
-        function showModel(id, data = null) {
-            if (id == "insmodel") {
-                $("#myModel").modal('show')
-                $(".modal-title").html("Insert Data")
-                $("#btnsub").html("Insert")
-            } else if (id == "updmodel") {
-                $("#myModel").modal('show')
-                $(".modal-title").html("Update Data")
+        function showModel(name, data = null) {
+            $("#form1").validate({
+                rules: {
+                    'name': {
+                        required: true,
+                    },
+                    'email': {
+                        required: true,
+                        email: true
+                    },
+                    'pwd': {
+                        required: true,
+                    },
+                    'conpwd': {
+                        required: true,
+                        equalTo: "#pwd"
+                    }
+                },
+                submitHandler: function() {
+                    $.ajax({
+                            url: 'crud.php',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: $("form").serialize() + "&fun=" + $("#btnsub").html()
+                        })
+                        .done(function(response) {
+                            showAlert(response.type, response.message);
+                            resetData();
+                        });
+                    $("#myModel").modal('hide')
+                },
+            });
+            $("#myModel").modal('show')
+            $(".modal-title").html(name+" Data")
+            $("#btnsub").html(name)
+            if (name == "Update") {
                 $("#name").val(data.name)
                 $("#email").val(data.email)
                 $("#pwd").val(data.pwd)
                 $("#conpwd").val(data.pwd)
                 $("#rowId").val(data.id)
-                $("#btnsub").html("Update")
             }
         }
 
         $(document).ready(function() {
             $("#insmodel").click(function() {
-                showModel("insmodel");
+                showModel("Insert");
             });
             $(".delete").click(function() {
                 var id = $(this).data("id")
@@ -168,36 +195,9 @@
                     })
                     .done(function(response) {
                         console.log(response);
-                        showModel("updmodel", response)
+                        showModel("Update", response)
                     });
             });
-            $("#btnsub").click(function(event) {
-                if ($("#btnsub").html() == "Update") {
-                    $.ajax({
-                            url: 'crud.php',
-                            type: 'POST',
-                            dataType: 'json',
-                            data: $("form").serialize() + "&fun=update"
-                        })
-                        .done(function(response) {
-                            resetData();
-                            showAlert(response.type, response.message);
-                        });
-                } else if ($("#btnsub").html() == "Insert") {
-                    $.ajax({
-                            url: 'crud.php',
-                            type: 'POST',
-                            dataType: 'json',
-                            data: $("form").serialize() + "&fun=insert"
-                        })
-                        .done(function(response) {
-                            resetData();
-                            showAlert(response.type, response.message);
-                        });
-                }
-                $("#myModel").modal('hide')
-            });
-
             $(".btnclose").click(function() {
                 resetData();
             });

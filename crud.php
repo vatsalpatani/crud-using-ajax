@@ -52,7 +52,7 @@ class Crud
                 $error = "Data Inserted Successfully !!";
                 echo json_encode(['message' => $error, 'type' => 'text-success']);
             }
-            if (!$this->res) {
+            else {
                 echo "<script> alert('query error')</script>";
             }
         }
@@ -64,25 +64,21 @@ class Crud
         $sql = "select * from crud_ajax where id = $id";
         $this->query = $sql;
         $this->res = mysqli_query($this->con, $this->query);
-        if ($this->res && $id != null) {
+        if ($this->res) {
             $data = mysqli_fetch_assoc($this->res);
             print_r(json_encode($data));
         }
-        if (!$this->res) {
+        else {
             echo "<script> alert('query error')</script>";
             print_r(json_encode("error"));
         }
     }
     // This function is use for select data from database
-    public function select($id = null)
+    public function select()
     {
-        $sql = "select * from crud_ajax $id";
+        $sql = "select * from crud_ajax";
         $this->query = $sql;
         $this->res = mysqli_query($this->con, $this->query);
-        if ($this->res && $id != null) {
-            $data = mysqli_fetch_assoc($this->res);
-            print_r(json_encode($data));
-        }
         if (!$this->res) {
             echo "<script> alert('query error')</script>";
             print_r(json_encode("error"));
