@@ -19,6 +19,7 @@ class Crud
         $email = $data['email'];
         if (isset($data['oldEmail'])) {
             if ($data['oldEmail'] === $email) {
+                echo json_encode(true);
                 return;
             }
         }
@@ -28,8 +29,10 @@ class Crud
         if ($this->res) {
             $count = mysqli_num_rows($this->res);
             if ($count > 0)
-                print_r(json_encode("email already exists"));
-        }
+                echo json_encode(false);
+            else
+                echo json_encode(true);
+        }   
     }
 
     // This function is used to check values that is empty or not

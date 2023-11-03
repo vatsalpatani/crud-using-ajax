@@ -145,85 +145,90 @@
                 oldemail = "oldEmail=" + data.email
             }
             $("#form1").validate({
-                rules: {
-                    'name': {
-                        required: true,
-                    },
-                    'email': {
-                        required: true,
-                        email: true,
-                        remote: {
-                            url: "crud.php?method=checkEmail&email=" + $("#email").val() + "&" + oldemail,
-                            type: "GET",    
+                        rules: {
+                            'name': {
+                                required: true,
+                            },
+                            'email': {
+                                required: true,
+                                email: true,
+                                remote: {
+                                    url: "crud.php?method=checkEmail&email=" + $("#email").val() + "&" + oldemail,
+                                    type: "GET",
+                                }
+                            },
+                            'pwd': {
+                                required: true,
+                            },
+                            'conpwd': {
+                                required: true,
+                                equalTo: "#pwd"
+                            }
+                        },
+                        messages: {
+                            'email': {
+                                remote: "Email already exists"
+                            }
+                        },
+                        submitHandler: function() {
+                            $.ajax({
+                                    url: 'crud.php',
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    data: $("form").serialize() + "&method=saveData"
+                                })
+                                .done(function(response) {
+                                    showAlert(response.type, response.message);
+                                    resetData();
+                                });
+                            $("#myModal").modal('hide')
+                        },
+                        highlight: function(element) {
+                            $(element).css('border-color', 'red');
+                        },
+                        unhighlight: function(element) {
+                            $(element).css('border-color', 'green');
                         }
-                    },
-                    'pwd': {
-                        required: true,
-                    },
-                    'conpwd': {
-                        required: true,
-                        equalTo: "#pwd"
+                        // highlight: function(element) {
+                        //     $(element).css('background', '#ffdddd');
+                        // },
+                        // unhighlight: function(element) {
+                        //     $(element).css('background', 'lightgreen');
+                        // }
+                    });
                     }
-                },
-                submitHandler: function() {
-                    $.ajax({
-                            url: 'crud.php',
-                            type: 'POST',
-                            dataType: 'json',
-                            data: $("form").serialize() + "&method=saveData"
-                        })
-                        .done(function(response) {
-                            showAlert(response.type, response.message);
+
+                    $(document).ready(function() {
+                        $("#insmodel").click(function() {
+                            showModal("Insert");
+                        });
+                        $(".delete").click(function() {
+                            var id = $(this).data("id")
+                            $.ajax({
+                                    url: 'crud.php?method=delete&id=' + id,
+                                    type: 'GET',
+                                    dataType: 'json',
+                                })
+                                .done(function(response) {
+                                    console.log(response);
+                                    showAlert(response.type, response.message);
+                                });
+                        });
+                        $(".updmodel").click(function() {
+                            var id = $(this).data("id")
+                            $.ajax({
+                                    url: 'crud.php?method=select&id=' + id,
+                                    type: 'GET',
+                                    dataType: 'json',
+                                })
+                                .done(function(response) {
+                                    showModal("Update", response)
+                                });
+                        });
+                        $(".btnclose").click(function() {
                             resetData();
                         });
-                    $("#myModal").modal('hide')
-                },
-                highlight: function(element) {
-                    $(element).css('border-color', 'red');
-                },
-                unhighlight: function(element) {
-                    $(element).css('border-color', 'green');
-                }
-                // highlight: function(element) {
-                //     $(element).css('background', '#ffdddd');
-                // },
-                // unhighlight: function(element) {
-                //     $(element).css('background', 'lightgreen');
-                // }
-            });
-        }
-
-        $(document).ready(function() {
-            $("#insmodel").click(function() {
-                showModal("Insert");
-            });
-            $(".delete").click(function() {
-                var id = $(this).data("id")
-                $.ajax({
-                        url: 'crud.php?method=delete&id=' + id,
-                        type: 'GET',
-                        dataType: 'json',
-                    })
-                    .done(function(response) {
-                        console.log(response);
-                        showAlert(response.type, response.message);
                     });
-            });
-            $(".updmodel").click(function() {
-                var id = $(this).data("id")
-                $.ajax({
-                        url: 'crud.php?method=select&id=' + id,
-                        type: 'GET',
-                        dataType: 'json',
-                    })
-                    .done(function(response) {
-                        showModal("Update", response)
-                    });
-            });
-            $(".btnclose").click(function() {
-                resetData();
-            });
-        });
     </script>
 </body>
 
